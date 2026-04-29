@@ -12,11 +12,13 @@ Open `index.html` in a browser. No build step or dependencies are required.
 - Applies the 2025-26 ATO resident and foreign resident income tax brackets.
 - Applies the resident low income tax offset where eligible.
 - Applies the Medicare levy for standard Australian residents, including the latest ATO-published low-income phase-in thresholds for a single non-SAPTO taxpayer.
-- Excludes HELP repayments, salary sacrifice, deductions, superannuation, Medicare levy surcharge, family Medicare thresholds, and senior/pensioner Medicare thresholds.
+- Calculates employer super guarantee at 12%, with options for super paid on top of salary or included in the entered package.
+- Shows the current National Minimum Wage reference rate: $24.95 per hour or $948 per week from 1 July 2025.
+- Excludes HELP repayments, salary sacrifice, deductions, Medicare levy surcharge, family Medicare thresholds, and senior/pensioner Medicare thresholds.
 
 ## Rate updates
 
-The calculator keeps tax rates versioned in `tax.js` rather than scraping the ATO website on page load. Live scraping from a static browser page is brittle because public web pages can change markup, block cross-origin requests, or be temporarily unavailable. A production version should use a small controlled rates feed or backend job that validates ATO changes before publishing them to the calculator.
+The calculator keeps official rates versioned in `tax.js` and attempts a best-effort live source check on page load when served over HTTP. Direct browser scraping of ATO and Fair Work pages can be blocked by cross-origin rules or broken by source markup changes, so the app always falls back to bundled official rates. A production version should use a small controlled rates feed or backend job that validates ATO and Fair Work changes before publishing them to the calculator.
 
 ## Sources
 
@@ -24,3 +26,5 @@ The calculator keeps tax rates versioned in `tax.js` rather than scraping the AT
 - ATO foreign resident tax rates: https://www.ato.gov.au/tax-rates-and-codes/tax-rates-foreign-residents/
 - ATO Medicare levy reduction thresholds: https://www.ato.gov.au/individuals-and-families/medicare-and-private-health-insurance/medicare-levy/medicare-levy-reduction/medicare-levy-reduction-for-low-income-earners
 - ATO low income tax offset: https://www.ato.gov.au/individuals-and-families/income-deductions-offsets-and-records/tax-offsets/low-income-tax-offset
+- ATO super guarantee: https://www.ato.gov.au/businesses-and-organisations/super-for-employers/paying-super-contributions/how-much-super-to-pay
+- Fair Work minimum wages: https://www.fairwork.gov.au/pay-and-wages/minimum-wages

@@ -277,7 +277,8 @@ select:focus {
 }
 
 .hero-result span,
-.pay-grid span {
+.pay-grid span,
+.reference-grid span {
   color: var(--muted);
   font-size: 0.82rem;
   font-weight: 800;
@@ -295,7 +296,7 @@ select:focus {
 
 .pay-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   border-bottom: 1px solid var(--line);
 }
 
@@ -303,15 +304,20 @@ select:focus {
   min-width: 0;
   padding: 17px 16px;
   border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
 }
 
-.pay-grid div:first-child {
+.pay-grid div:nth-child(3n + 1) {
   padding-left: 0;
 }
 
-.pay-grid div:last-child {
+.pay-grid div:nth-child(3n) {
   border-right: 0;
   padding-right: 0;
+}
+
+.pay-grid div:nth-last-child(-n + 3) {
+  border-bottom: 0;
 }
 
 .pay-grid strong {
@@ -320,6 +326,39 @@ select:focus {
   font-size: clamp(1.05rem, 2vw, 1.45rem);
   line-height: 1.1;
   overflow-wrap: anywhere;
+}
+
+.reference-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding-top: 18px;
+}
+
+.reference-grid div {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper-raised);
+  padding: 14px;
+}
+
+.reference-grid strong {
+  display: block;
+  margin-top: 5px;
+  color: var(--warm);
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.reference-grid small {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 700;
+  line-height: 1.35;
 }
 
 .table-block {
@@ -403,6 +442,13 @@ tr.total-row td {
   margin-right: 6px;
 }
 
+.rate-status {
+  display: block;
+  margin-top: 8px;
+  color: var(--ink);
+  font-weight: 700;
+}
+
 @media (max-width: 880px) {
   .app-shell {
     width: min(100% - 24px, 680px);
@@ -435,20 +481,24 @@ tr.total-row td {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .pay-grid div {
+  .pay-grid div,
+  .pay-grid div:nth-child(3n),
+  .pay-grid div:nth-child(3n + 1) {
+    padding: 15px 14px;
+    border-right: 1px solid var(--line);
     border-bottom: 1px solid var(--line);
   }
 
-  .pay-grid div:nth-child(2) {
+  .pay-grid div:nth-child(odd) {
+    padding-left: 0;
+  }
+
+  .pay-grid div:nth-child(even) {
     border-right: 0;
     padding-right: 0;
   }
 
-  .pay-grid div:nth-child(3) {
-    padding-left: 0;
-  }
-
-  .pay-grid div:nth-child(n + 3) {
+  .pay-grid div:nth-last-child(-n + 2) {
     border-bottom: 0;
   }
 }
@@ -474,14 +524,16 @@ tr.total-row td {
   .segmented.two-up,
   .two-fields,
   .assumption-list div,
-  .pay-grid {
+  .pay-grid,
+  .reference-grid {
     grid-template-columns: 1fr;
   }
 
   .pay-grid div,
-  .pay-grid div:first-child,
-  .pay-grid div:last-child,
-  .pay-grid div:nth-child(3) {
+  .pay-grid div:nth-child(3n),
+  .pay-grid div:nth-child(3n + 1),
+  .pay-grid div:nth-child(odd),
+  .pay-grid div:nth-child(even) {
     padding: 13px 0;
     border-right: 0;
     border-bottom: 1px solid var(--line);

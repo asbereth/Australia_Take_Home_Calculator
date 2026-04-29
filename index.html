@@ -13,7 +13,7 @@
           <p class="eyebrow">2025-26 Australian tax year</p>
           <h1>Take-home pay calculator</h1>
         </div>
-        <span class="rate-badge">ATO rates checked Apr 2026</span>
+        <span id="rateBadge" class="rate-badge">ATO, Fair Work rates checked Apr 2026</span>
       </header>
 
       <div class="workspace">
@@ -63,6 +63,20 @@
               </div>
             </fieldset>
 
+            <fieldset class="field-group">
+              <legend class="field-label">Superannuation</legend>
+              <div class="segmented two-up">
+                <label>
+                  <input type="radio" name="superMode" value="onTop" checked>
+                  <span>Paid on top</span>
+                </label>
+                <label>
+                  <input type="radio" name="superMode" value="included">
+                  <span>Included</span>
+                </label>
+              </div>
+            </fieldset>
+
             <div class="two-fields">
               <div class="field-group">
                 <label class="field-label" for="hoursPerWeek">Hours/week</label>
@@ -82,11 +96,15 @@
           <dl class="assumption-list">
             <div>
               <dt>Taxable income</dt>
-              <dd>Gross pay before deductions</dd>
+              <dd>Cash salary before deductions</dd>
             </div>
             <div>
               <dt>Resident offsets</dt>
               <dd>LITO included where eligible</dd>
+            </div>
+            <div>
+              <dt>Super</dt>
+              <dd id="superAssumption">12% employer SG</dd>
             </div>
             <div>
               <dt>Not included</dt>
@@ -117,6 +135,27 @@
             <div>
               <span>Effective tax</span>
               <strong id="effectiveTaxRate">22.8%</strong>
+            </div>
+            <div>
+              <span>Super/year</span>
+              <strong id="annualSuper">$12,000</strong>
+            </div>
+            <div>
+              <span>Total package</span>
+              <strong id="totalPackage">$112,000</strong>
+            </div>
+          </div>
+
+          <div class="reference-grid" aria-label="Pay references">
+            <div>
+              <span>National minimum wage</span>
+              <strong id="minimumWageHourly">$24.95/hr</strong>
+              <small id="minimumWageDetail">$948/wk, $49,296/yr before tax</small>
+            </div>
+            <div>
+              <span>Minimum wage package</span>
+              <strong id="minimumWagePackage">$55,212/yr</strong>
+              <small id="minimumWageSuper">Includes 12% super guarantee</small>
             </div>
           </div>
 
@@ -155,7 +194,10 @@
         <a href="https://www.ato.gov.au/tax-rates-and-codes/tax-rates-australian-residents">ATO resident rates</a>,
         <a href="https://www.ato.gov.au/tax-rates-and-codes/tax-rates-foreign-residents/">ATO foreign resident rates</a>,
         <a href="https://www.ato.gov.au/individuals-and-families/medicare-and-private-health-insurance/medicare-levy/medicare-levy-reduction/medicare-levy-reduction-for-low-income-earners">ATO Medicare levy thresholds</a>,
-        <a href="https://www.ato.gov.au/individuals-and-families/income-deductions-offsets-and-records/tax-offsets/low-income-tax-offset">ATO LITO</a>.
+        <a href="https://www.ato.gov.au/individuals-and-families/income-deductions-offsets-and-records/tax-offsets/low-income-tax-offset">ATO LITO</a>,
+        <a href="https://www.ato.gov.au/businesses-and-organisations/super-for-employers/paying-super-contributions/how-much-super-to-pay">ATO super guarantee</a>,
+        <a href="https://www.fairwork.gov.au/pay-and-wages/minimum-wages">Fair Work minimum wage</a>.
+        <span id="rateStatus" class="rate-status">Using bundled official rates.</span>
       </footer>
     </main>
 
