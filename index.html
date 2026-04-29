@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en-AU">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Australian Take-Home Pay Calculator</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="app-header">
+        <div>
+          <p class="eyebrow">2025-26 Australian tax year</p>
+          <h1>Take-home pay calculator</h1>
+        </div>
+        <span class="rate-badge">ATO rates checked Apr 2026</span>
+      </header>
+
+      <div class="workspace">
+        <section class="panel controls-panel" aria-label="Calculator inputs">
+          <form id="calculatorForm">
+            <div class="field-group">
+              <label class="field-label" for="incomeAmount">Gross income</label>
+              <div class="money-input">
+                <span aria-hidden="true">$</span>
+                <input id="incomeAmount" name="incomeAmount" type="text" inputmode="decimal" autocomplete="off" value="100,000">
+              </div>
+            </div>
+
+            <fieldset class="field-group">
+              <legend class="field-label">Pay basis</legend>
+              <div class="segmented">
+                <label>
+                  <input type="radio" name="payBasis" value="annual" checked>
+                  <span>Annual</span>
+                </label>
+                <label>
+                  <input type="radio" name="payBasis" value="monthly">
+                  <span>Monthly</span>
+                </label>
+                <label>
+                  <input type="radio" name="payBasis" value="weekly">
+                  <span>Weekly</span>
+                </label>
+                <label>
+                  <input type="radio" name="payBasis" value="hourly">
+                  <span>Hourly</span>
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset class="field-group">
+              <legend class="field-label">Tax residency</legend>
+              <div class="segmented two-up">
+                <label>
+                  <input type="radio" name="residency" value="resident" checked>
+                  <span>Resident</span>
+                </label>
+                <label>
+                  <input type="radio" name="residency" value="foreign">
+                  <span>Non-resident</span>
+                </label>
+              </div>
+            </fieldset>
+
+            <div class="two-fields">
+              <div class="field-group">
+                <label class="field-label" for="hoursPerWeek">Hours/week</label>
+                <input id="hoursPerWeek" class="number-input" name="hoursPerWeek" type="number" min="1" max="80" step="0.5" value="38">
+              </div>
+
+              <div class="field-group">
+                <label class="field-label" for="medicareProfile">Medicare</label>
+                <select id="medicareProfile" name="medicareProfile">
+                  <option value="standard">Standard</option>
+                  <option value="exempt">Exempt</option>
+                </select>
+              </div>
+            </div>
+          </form>
+
+          <dl class="assumption-list">
+            <div>
+              <dt>Taxable income</dt>
+              <dd>Gross pay before deductions</dd>
+            </div>
+            <div>
+              <dt>Resident offsets</dt>
+              <dd>LITO included where eligible</dd>
+            </div>
+            <div>
+              <dt>Not included</dt>
+              <dd>HELP, salary sacrifice, MLS, deductions</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="panel results-panel" aria-label="Calculator results">
+          <div class="hero-result">
+            <span>Annual take-home</span>
+            <strong id="annualTakeHome">$77,212</strong>
+          </div>
+
+          <div class="pay-grid" aria-live="polite">
+            <div>
+              <span>Monthly</span>
+              <strong id="monthlyTakeHome">$6,434</strong>
+            </div>
+            <div>
+              <span>Weekly</span>
+              <strong id="weeklyTakeHome">$1,485</strong>
+            </div>
+            <div>
+              <span>Hourly</span>
+              <strong id="hourlyTakeHome">$39.07</strong>
+            </div>
+            <div>
+              <span>Effective tax</span>
+              <strong id="effectiveTaxRate">22.8%</strong>
+            </div>
+          </div>
+
+          <div class="table-block">
+            <div class="table-heading">
+              <h2>Breakdown</h2>
+              <span id="taxYearLabel">Resident, 2025-26</span>
+            </div>
+            <table>
+              <tbody id="breakdownBody"></tbody>
+            </table>
+          </div>
+
+          <div class="table-block">
+            <div class="table-heading">
+              <h2>Tax brackets</h2>
+              <span id="marginalRateLabel">Marginal rate 30.0%</span>
+            </div>
+            <table class="bracket-table">
+              <thead>
+                <tr>
+                  <th scope="col">Band</th>
+                  <th scope="col">Rate</th>
+                  <th scope="col">This income</th>
+                  <th scope="col">Tax</th>
+                </tr>
+              </thead>
+              <tbody id="bracketBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <footer class="source-footer">
+        Sources:
+        <a href="https://www.ato.gov.au/tax-rates-and-codes/tax-rates-australian-residents">ATO resident rates</a>,
+        <a href="https://www.ato.gov.au/tax-rates-and-codes/tax-rates-foreign-residents/">ATO foreign resident rates</a>,
+        <a href="https://www.ato.gov.au/individuals-and-families/medicare-and-private-health-insurance/medicare-levy/medicare-levy-reduction/medicare-levy-reduction-for-low-income-earners">ATO Medicare levy thresholds</a>,
+        <a href="https://www.ato.gov.au/individuals-and-families/income-deductions-offsets-and-records/tax-offsets/low-income-tax-offset">ATO LITO</a>.
+      </footer>
+    </main>
+
+    <script src="tax.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
