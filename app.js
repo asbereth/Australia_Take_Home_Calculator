@@ -87,7 +87,8 @@
     addBreakdownRow("Employer super guarantee", formatMoney(result.super.annual));
     addBreakdownRow("Total salary package", formatMoney(result.package.annual));
     addBreakdownRow("Income tax before offsets", formatMoney(result.taxBeforeOffsets));
-    addBreakdownRow("Low income tax offset", `-${formatMoney(result.litoApplied)}`);
+    addBreakdownRow("LITO entitlement", formatMoney(result.litoEntitlement));
+    addBreakdownRow("LITO applied to income tax", `-${formatMoney(result.litoApplied)}`);
     addBreakdownRow("Income tax after offsets", formatMoney(result.incomeTax));
     addBreakdownRow("Medicare levy", formatMoney(result.medicareLevy));
     addBreakdownRow("Total tax", formatMoney(result.totalTax), { total: true });
