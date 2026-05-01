@@ -6,6 +6,9 @@
   const incomeInput = document.getElementById("incomeAmount");
   const hoursInput = document.getElementById("hoursPerWeek");
   const medicareProfile = document.getElementById("medicareProfile");
+  const workFromHomeHours = document.getElementById("workFromHomeHours");
+  const otherDeductions = document.getElementById("otherDeductions");
+  const deductionWorkUsePercent = document.getElementById("deductionWorkUsePercent");
 
   const rateBadge = document.getElementById("rateBadge");
   const annualTakeHome = document.getElementById("annualTakeHome");
@@ -15,6 +18,9 @@
   const effectiveTaxRate = document.getElementById("effectiveTaxRate");
   const annualSuper = document.getElementById("annualSuper");
   const totalPackage = document.getElementById("totalPackage");
+  const annualDeductions = document.getElementById("annualDeductions");
+  const taxSaved = document.getElementById("taxSaved");
+  const annualAfterExpenses = document.getElementById("annualAfterExpenses");
   const taxYearLabel = document.getElementById("taxYearLabel");
   const marginalRateLabel = document.getElementById("marginalRateLabel");
   const breakdownBody = document.getElementById("breakdownBody");
@@ -24,6 +30,8 @@
   const minimumWagePackage = document.getElementById("minimumWagePackage");
   const minimumWageSuper = document.getElementById("minimumWageSuper");
   const superAssumption = document.getElementById("superAssumption");
+  const deductionAssumption = document.getElementById("deductionAssumption");
+  const workFromHomeRateNote = document.getElementById("workFromHomeRateNote");
   const rateStatus = document.getElementById("rateStatus");
 
   const officialSources = {
@@ -86,13 +94,21 @@
     addBreakdownRow("Cash salary before tax", formatMoney(result.annualIncome));
     addBreakdownRow("Employer super guarantee", formatMoney(result.super.annual));
     addBreakdownRow("Total salary package", formatMoney(result.package.annual));
+    addBreakdownRow("Work from home deduction", formatMoney(result.deductions.workFromHome));
+    addBreakdownRow("Other expenses entered", formatMoney(result.deductions.otherExpensesGross));
+    addBreakdownRow("Other expenses work/business use", percent.format(result.deductions.otherWorkUsePercent));
+    addBreakdownRow("Other deductible amount", formatMoney(result.deductions.otherDeductible));
+    addBreakdownRow("Total deductions", formatMoney(result.deductions.total));
+    addBreakdownRow("Taxable income after deductions", formatMoney(result.taxableIncome));
     addBreakdownRow("Income tax before offsets", formatMoney(result.taxBeforeOffsets));
     addBreakdownRow("LITO entitlement", formatMoney(result.litoEntitlement));
     addBreakdownRow("LITO applied to income tax", `-${formatMoney(result.litoApplied)}`);
     addBreakdownRow("Income tax after offsets", formatMoney(result.incomeTax));
     addBreakdownRow("Medicare levy", formatMoney(result.medicareLevy));
     addBreakdownRow("Total tax", formatMoney(result.totalTax), { total: true });
-    addBreakdownRow("Annual take-home", formatMoney(result.takeHome.annual), { total: true });
+    addBreakdownRow("Tax saved from deductions", formatMoney(result.taxSavedFromDeductions));
+    addBreakdownRow("Annual take-home before expenses", formatMoney(result.takeHome.annual), { total: true });
+    addBreakdownRow("Annual take-home after deductible expenses", formatMoney(result.afterExpenses.annual), { total: true });
   }
 
   function renderBracketRows(result) {
@@ -134,6 +150,11 @@
     if (isForeign) medicareProfile.value = "standard";
   }
 
+  function setInitialDefaults() {
+    const annualPayBasis = form.querySelector('input[name="payBasis"][value="annual"]');
+    if (annualPayBasis) annualPayBasis.checked = true;
+  }
+
   function calculate() {
     const residency = getChecked("residency") || "resident";
     updateMedicareAvailability(residency);
@@ -144,7 +165,12 @@
       residency,
       hoursPerWeek: hoursInput.value,
       medicareProfile: medicareProfile.value,
-      superMode: getChecked("superMode") || "onTop"
+      superMode: getChecked("superMode") || "onTop",
+      deductions: {
+        workFromHomeHours: workFromHomeHours.value,
+        otherExpenses: otherDeductions.value,
+        otherWorkUsePercent: deductionWorkUsePercent.value
+      }
     });
 
     annualTakeHome.textContent = formatMoney(result.takeHome.annual);
@@ -154,7 +180,12 @@
     effectiveTaxRate.textContent = percent.format(result.effectiveTaxRate);
     annualSuper.textContent = formatMoney(result.super.annual);
     totalPackage.textContent = formatMoney(result.package.annual);
+    annualDeductions.textContent = formatMoney(result.deductions.total);
+    taxSaved.textContent = formatMoney(result.taxSavedFromDeductions);
+    annualAfterExpenses.textContent = formatMoney(result.afterExpenses.annual);
     superAssumption.textContent = `${percent.format(result.superRate)} employer SG`;
+    deductionAssumption.textContent = `${formatMoney(result.deductions.workFromHomeRate, true)}/hr WFH fixed rate plus apportioned other expenses`;
+    workFromHomeRateNote.textContent = `WFH fixed rate: ${formatMoney(result.deductions.workFromHomeRate, true)}/hr, latest bundled ATO rate (${result.deductions.workFromHomeRateYear}). Other expenses are multiplied by the work/business-use percentage.`;
 
     const residencyLabel = result.residency === "foreign" ? "Non-resident" : "Resident";
     taxYearLabel.textContent = `${residencyLabel}, ${result.taxYear}`;
@@ -166,10 +197,10 @@
     renderBracketRows(result);
   }
 
-  function formatIncomeInput() {
-    const value = tax.toNumber(incomeInput.value);
+  function formatMoneyInput(input) {
+    const value = tax.toNumber(input.value);
     if (value > 0) {
-      incomeInput.value = new Intl.NumberFormat("en-AU", {
+      input.value = new Intl.NumberFormat("en-AU", {
         maximumFractionDigits: value % 1 === 0 ? 0 : 2
       }).format(value);
     }
@@ -337,8 +368,10 @@
 
   form.addEventListener("input", calculate);
   form.addEventListener("change", calculate);
-  incomeInput.addEventListener("blur", formatIncomeInput);
+  incomeInput.addEventListener("blur", () => formatMoneyInput(incomeInput));
+  otherDeductions.addEventListener("blur", () => formatMoneyInput(otherDeductions));
 
+  setInitialDefaults();
   calculate();
   refreshOfficialRatesOnLoad();
 })();

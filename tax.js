@@ -10,6 +10,7 @@
   const WEEKS_PER_YEAR = 52;
   const MONTHS_PER_YEAR = 12;
   const DEFAULT_HOURS_PER_WEEK = 38;
+  const MAX_ANNUAL_HOURS = 8760;
 
   const DEFAULT_RATE_DATA = {
     taxYear: "2025-26",
@@ -51,6 +52,11 @@
       casualHourly: 31.19,
       hoursPerWeek: 38,
       effectiveFrom: "2025-07-01"
+    },
+    workFromHomeFixedRate: {
+      rate: 0.7,
+      rateYear: "2024-25",
+      checkedDateLabel: "May 2025"
     }
   };
 
@@ -74,7 +80,8 @@
       medicareLevy: { ...data.medicareLevy },
       lowIncomeTaxOffset: { ...data.lowIncomeTaxOffset },
       superGuarantee: { ...data.superGuarantee },
-      nationalMinimumWage: { ...data.nationalMinimumWage }
+      nationalMinimumWage: { ...data.nationalMinimumWage },
+      workFromHomeFixedRate: { ...data.workFromHomeFixedRate }
     };
   }
 
@@ -115,6 +122,10 @@
       merged.nationalMinimumWage = { ...merged.nationalMinimumWage, ...nextData.nationalMinimumWage };
     }
 
+    if (nextData.workFromHomeFixedRate) {
+      merged.workFromHomeFixedRate = { ...merged.workFromHomeFixedRate, ...nextData.workFromHomeFixedRate };
+    }
+
     activeRateData = cloneRateData(merged);
     return getRateData();
   }
@@ -134,6 +145,16 @@
 
   function money(value) {
     return Math.max(0, toNumber(value));
+  }
+
+  function percentage(value, fallback) {
+    const parsed = toNumber(value);
+    const nextValue = Number.isFinite(parsed) && String(value ?? "").trim() !== "" ? parsed : fallback;
+    return Math.min(Math.max(nextValue, 0), 100) / 100;
+  }
+
+  function firstValue(primary, fallback) {
+    return primary === undefined || primary === null || primary === "" ? fallback : primary;
   }
 
   function normaliseHours(value) {
@@ -250,6 +271,50 @@
     };
   }
 
+  function calculateDeductionAmounts(options) {
+    const source = options || {};
+    const deductions = source.deductions || {};
+    const workFromHomeHoursValue = firstValue(deductions.workFromHomeHours, source.workFromHomeHours);
+    const otherExpensesValue = firstValue(deductions.otherExpenses, source.otherDeductions);
+    const otherWorkUseValue = firstValue(deductions.otherWorkUsePercent, source.otherDeductionWorkUsePercent);
+    const workFromHomeHours = Math.min(money(workFromHomeHoursValue), MAX_ANNUAL_HOURS);
+    const workFromHomeRate = money(activeRateData.workFromHomeFixedRate.rate);
+    const workFromHome = Math.floor(workFromHomeHours * workFromHomeRate);
+    const otherExpensesGross = money(otherExpensesValue);
+    const otherWorkUsePercent = percentage(otherWorkUseValue, 100);
+    const otherDeductible = otherExpensesGross * otherWorkUsePercent;
+
+    return {
+      workFromHomeHours,
+      workFromHomeRate,
+      workFromHomeRateYear: activeRateData.workFromHomeFixedRate.rateYear,
+      workFromHome,
+      otherExpensesGross,
+      otherWorkUsePercent,
+      otherDeductible,
+      total: workFromHome + otherDeductible
+    };
+  }
+
+  function calculateTaxComponents(taxableIncome, residency, medicareProfile) {
+    const bracketResult = calculateBracketTax(taxableIncome, residency);
+    const litoEntitlement = calculateLitoEntitlement(taxableIncome, residency);
+    const litoApplied = Math.min(bracketResult.tax, litoEntitlement);
+    const incomeTax = Math.max(0, bracketResult.tax - litoApplied);
+    const medicareLevy = calculateMedicareLevy(taxableIncome, residency, medicareProfile);
+    const totalTax = incomeTax + medicareLevy;
+
+    return {
+      bracketResult,
+      taxBeforeOffsets: bracketResult.tax,
+      litoEntitlement,
+      litoApplied,
+      incomeTax,
+      medicareLevy,
+      totalTax
+    };
+  }
+
   function calculateMinimumWageReference() {
     const wage = activeRateData.nationalMinimumWage;
     const superRate = Math.max(0, toNumber(activeRateData.superGuarantee.rate));
@@ -280,13 +345,14 @@
     const medicareProfile = options.medicareProfile === "exempt" ? "exempt" : "standard";
     const superAmounts = calculateSuperAmounts(enteredAnnualIncome, options.superMode);
     const annualIncome = superAmounts.cashAnnual;
-    const bracketResult = calculateBracketTax(annualIncome, residency);
-    const litoEntitlement = calculateLitoEntitlement(annualIncome, residency);
-    const litoApplied = Math.min(bracketResult.tax, litoEntitlement);
-    const incomeTax = Math.max(0, bracketResult.tax - litoApplied);
-    const medicareLevy = calculateMedicareLevy(annualIncome, residency, medicareProfile);
-    const totalTax = incomeTax + medicareLevy;
+    const deductions = calculateDeductionAmounts(options || {});
+    const taxableIncome = Math.max(0, annualIncome - deductions.total);
+    const taxComponents = calculateTaxComponents(taxableIncome, residency, medicareProfile);
+    const taxWithoutDeductions = calculateTaxComponents(annualIncome, residency, medicareProfile);
+    const totalTax = taxComponents.totalTax;
+    const taxSavedFromDeductions = Math.max(0, taxWithoutDeductions.totalTax - totalTax);
     const takeHomeAnnual = Math.max(0, annualIncome - totalTax);
+    const afterExpensesAnnual = Math.max(0, takeHomeAnnual - deductions.total);
 
     return {
       taxYear: activeRateData.taxYear,
@@ -294,21 +360,26 @@
       residency,
       enteredAnnualIncome,
       annualIncome,
+      taxableIncome,
       gross: periodiseAnnual(annualIncome, options.hoursPerWeek),
       takeHome: periodiseAnnual(takeHomeAnnual, options.hoursPerWeek),
+      afterExpenses: periodiseAnnual(afterExpensesAnnual, options.hoursPerWeek),
       super: periodiseAnnual(superAmounts.superAnnual, options.hoursPerWeek),
       package: periodiseAnnual(superAmounts.packageAnnual, options.hoursPerWeek),
       superMode: superAmounts.mode,
       superRate: superAmounts.rate,
-      taxBeforeOffsets: bracketResult.tax,
-      litoEntitlement,
-      litoApplied,
-      incomeTax,
-      medicareLevy,
+      deductions,
+      taxBeforeOffsets: taxComponents.taxBeforeOffsets,
+      litoEntitlement: taxComponents.litoEntitlement,
+      litoApplied: taxComponents.litoApplied,
+      incomeTax: taxComponents.incomeTax,
+      medicareLevy: taxComponents.medicareLevy,
       totalTax,
+      taxWithoutDeductions: taxWithoutDeductions.totalTax,
+      taxSavedFromDeductions,
       effectiveTaxRate: annualIncome > 0 ? totalTax / annualIncome : 0,
-      marginalRate: getMarginalRate(annualIncome, residency),
-      bracketRows: bracketResult.rows,
+      marginalRate: getMarginalRate(taxableIncome, residency),
+      bracketRows: taxComponents.bracketResult.rows,
       minimumWage: calculateMinimumWageReference()
     };
   }
@@ -322,6 +393,7 @@
     MEDICARE_LEVY: { ...DEFAULT_RATE_DATA.medicareLevy },
     annualiseIncome,
     applyRateData,
+    calculateDeductionAmounts,
     calculateTakeHome,
     calculateBracketTax,
     calculateLitoEntitlement,

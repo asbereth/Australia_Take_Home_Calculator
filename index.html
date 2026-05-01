@@ -18,7 +18,7 @@
 
       <div class="workspace">
         <section class="panel controls-panel" aria-label="Calculator inputs">
-          <form id="calculatorForm">
+          <form id="calculatorForm" autocomplete="off">
             <div class="field-group">
               <label class="field-label" for="incomeAmount">Gross income</label>
               <div class="money-input">
@@ -91,16 +91,47 @@
                 </select>
               </div>
             </div>
+
+            <fieldset class="field-group">
+              <legend class="field-label">Deductions</legend>
+              <div class="deduction-grid">
+                <div class="field-group">
+                  <label class="field-label" for="workFromHomeHours">WFH hours/year</label>
+                  <input id="workFromHomeHours" class="number-input" name="workFromHomeHours" type="number" min="0" max="8760" step="1" value="0">
+                </div>
+
+                <div class="field-group">
+                  <label class="field-label" for="otherDeductions">Other expenses/year</label>
+                  <div class="money-input compact-money">
+                    <span aria-hidden="true">$</span>
+                    <input id="otherDeductions" name="otherDeductions" type="text" inputmode="decimal" autocomplete="off" value="0">
+                  </div>
+                </div>
+
+                <div class="field-group">
+                  <label class="field-label" for="deductionWorkUsePercent">Work/business use</label>
+                  <div class="percent-input">
+                    <input id="deductionWorkUsePercent" class="number-input" name="deductionWorkUsePercent" type="number" min="0" max="100" step="1" value="100">
+                    <span aria-hidden="true">%</span>
+                  </div>
+                </div>
+              </div>
+              <p id="workFromHomeRateNote" class="field-hint">WFH fixed rate uses the latest bundled ATO rate. Other expenses are reduced to the work/business-use portion.</p>
+            </fieldset>
           </form>
 
           <dl class="assumption-list">
             <div>
               <dt>Taxable income</dt>
-              <dd>Cash salary before deductions</dd>
+              <dd>Cash salary less deductions</dd>
             </div>
             <div>
               <dt>Resident offsets</dt>
               <dd>LITO included where eligible</dd>
+            </div>
+            <div>
+              <dt>Deductions</dt>
+              <dd id="deductionAssumption">WFH fixed rate plus apportioned other expenses</dd>
             </div>
             <div>
               <dt>Super</dt>
@@ -108,7 +139,7 @@
             </div>
             <div>
               <dt>Not included</dt>
-              <dd>HELP, salary sacrifice, MLS, deductions</dd>
+              <dd>HELP, salary sacrifice, MLS, depreciation schedules</dd>
             </div>
           </dl>
         </section>
@@ -143,6 +174,18 @@
             <div>
               <span>Total package</span>
               <strong id="totalPackage">$112,000</strong>
+            </div>
+            <div>
+              <span>Deductions/year</span>
+              <strong id="annualDeductions">$0</strong>
+            </div>
+            <div>
+              <span>Tax saved</span>
+              <strong id="taxSaved">$0</strong>
+            </div>
+            <div>
+              <span>After expenses</span>
+              <strong id="annualAfterExpenses">$77,212</strong>
             </div>
           </div>
 
@@ -196,7 +239,10 @@
         <a href="https://www.ato.gov.au/individuals-and-families/medicare-and-private-health-insurance/medicare-levy/medicare-levy-reduction/medicare-levy-reduction-for-low-income-earners">ATO Medicare levy thresholds</a>,
         <a href="https://www.ato.gov.au/individuals-and-families/income-deductions-offsets-and-records/tax-offsets/low-income-tax-offset">ATO LITO</a>,
         <a href="https://www.ato.gov.au/businesses-and-organisations/super-for-employers/paying-super-contributions/how-much-super-to-pay">ATO super guarantee</a>,
-        <a href="https://www.fairwork.gov.au/pay-and-wages/minimum-wages">Fair Work minimum wage</a>.
+        <a href="https://www.fairwork.gov.au/pay-and-wages/minimum-wages">Fair Work minimum wage</a>,
+        <a href="https://www.ato.gov.au/individuals-and-families/income-deductions-offsets-and-records/deductions-you-can-claim/work-related-deductions/how-to-claim-deductions">ATO deductions</a>,
+        <a href="https://www.ato.gov.au/businesses-and-organisations/income-deductions-and-concessions/income-and-deductions-for-business/deductions/">ATO business deductions</a>,
+        <a href="https://www.ato.gov.au/individuals-and-families/income-deductions-offsets-and-records/deductions-you-can-claim/working-from-home-expenses/fixed-rate-method">ATO work from home fixed rate</a>.
         <span id="rateStatus" class="rate-status">Using bundled official rates.</span>
       </footer>
     </main>

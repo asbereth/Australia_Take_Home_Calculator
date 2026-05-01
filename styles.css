@@ -180,6 +180,45 @@ select {
   outline: 0;
 }
 
+.compact-money {
+  min-height: 46px;
+}
+
+.compact-money span {
+  padding-left: 12px;
+}
+
+.compact-money input {
+  padding: 10px 12px 10px 8px;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.percent-input {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  min-height: 46px;
+  background: var(--input);
+  overflow: hidden;
+}
+
+.percent-input .number-input {
+  min-height: 44px;
+  border: 0;
+  border-radius: 0;
+  padding-right: 6px;
+  background: transparent;
+}
+
+.percent-input span {
+  padding: 0 12px 0 4px;
+  color: var(--muted);
+  font-weight: 800;
+}
+
 select:disabled {
   color: var(--muted);
   background: #18211f;
@@ -230,6 +269,7 @@ select:disabled {
 
 .segmented input:focus-visible + span,
 .money-input:focus-within,
+.percent-input:focus-within,
 .number-input:focus,
 select:focus {
   outline: 3px solid rgba(40, 184, 169, 0.28);
@@ -240,6 +280,24 @@ select:focus {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 12px;
+}
+
+.deduction-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.deduction-grid .field-group:last-child {
+  grid-column: 1 / -1;
+}
+
+.field-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.35;
 }
 
 .assumption-list {
@@ -523,10 +581,15 @@ tr.total-row td {
 
   .segmented.two-up,
   .two-fields,
+  .deduction-grid,
   .assumption-list div,
   .pay-grid,
   .reference-grid {
     grid-template-columns: 1fr;
+  }
+
+  .deduction-grid .field-group:last-child {
+    grid-column: auto;
   }
 
   .pay-grid div,
