@@ -29,11 +29,12 @@ Current implemented scope for Australia:
 Current implemented scope for Canada:
 
 - Accepts annual, monthly, weekly, or hourly gross employment income.
-- Supports Canadian provinces and territories except Quebec.
-- Applies the 2026 federal brackets, provincial/territorial brackets, basic personal amount credits, CPP, CPP2, and EI.
+- Supports Canadian provinces and territories, including a separate Quebec flow.
+- Applies the 2026 federal brackets, provincial/territorial brackets, basic personal amount credits, CPP/CPP2 or QPP/QPP2, EI, and QPIP where applicable.
+- Applies the federal Quebec abatement and Quebec worker deduction for Quebec estimates.
 - Applies a simple annual tax deduction amount before income tax.
 - Shows annual take-home before and after the entered annual deductions.
-- Excludes Quebec income tax/QPP/QPIP, dependants, benefits, RRSP limit validation, credits beyond the standard employment/basic personal/CPP/EI credits, and full T1 return handling.
+- Excludes dependants, benefits, RRSP limit validation, credits beyond the standard employment/basic personal/payroll credits, and full T1/TP1 return handling.
 
 ## Deduction assumptions
 
@@ -62,4 +63,6 @@ Direct browser scraping of tax authority pages can be blocked by cross-origin ru
 - CRA 2026 payroll formulas: https://www.canada.ca/en/revenue-agency/services/forms-publications/payroll/t4127-payroll-deductions-formulas/t4127-jan/t4127-jan-payroll-deductions-formulas-computer-programs.html
 - CRA tax rates for individuals: https://www.canada.ca/en/revenue-agency/services/tax/individuals/frequently-asked-questions-individuals/canadian-income-tax-rates-individuals-current-previous-years.html
 - CRA province or territory of residence: https://www.canada.ca/en/revenue-agency/services/tax/individuals/topics/about-your-tax-return/tax-return/completing-a-tax-return/personal-address-information/your-province-territory-residence.html
+- Revenu Quebec 2026 principal changes: https://www.revenuquebec.ca/en/businesses/source-deductions-and-employer-contributions/employers-principal-changes-for-2026/
+- Revenu Quebec source deduction formulas: https://www.revenuquebec.ca/en/online-services/forms-and-publications/current-details/tp-1015-f-v/
 - Revenu Quebec WebRAS: https://www.revenuquebec.ca/en/online-services/tools/webras/

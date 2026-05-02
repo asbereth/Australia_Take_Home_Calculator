@@ -156,8 +156,14 @@
       },
       QC: {
         label: "Quebec",
-        supported: false,
-        unsupportedReason: "Quebec requires a separate Revenu Quebec flow for Quebec income tax, QPP, and QPIP."
+        source: "Revenu Quebec",
+        basicAmount: 18952,
+        brackets: [
+          { from: 0, to: 54345, rate: 0.14, label: "$0 - $54,345" },
+          { from: 54345, to: 108680, rate: 0.19, label: "$54,346 - $108,680" },
+          { from: 108680, to: 132245, rate: 0.24, label: "$108,681 - $132,245" },
+          { from: 132245, to: Infinity, rate: 0.2575, label: "$132,246 and over" }
+        ]
       },
       SK: {
         label: "Saskatchewan",
@@ -193,6 +199,31 @@
       maxInsurable: 68900,
       rate: 0.0163,
       maxPremium: 1123.07
+    },
+    quebec: {
+      federalAbatementRate: 0.165,
+      workerDeduction: {
+        rate: 0.06,
+        max: 1450
+      },
+      qpp: {
+        ympe: 74600,
+        yampe: 85000,
+        exemption: 3500,
+        baseRate: 0.053,
+        firstAdditionalRate: 0.01,
+        secondAdditionalRate: 0.04
+      },
+      ei: {
+        maxInsurable: 68900,
+        rate: 0.013,
+        maxPremium: 895.7
+      },
+      qpip: {
+        maxInsurable: 103000,
+        rate: 0.0043,
+        maxPremium: 442.9
+      }
     }
   };
 
@@ -297,14 +328,13 @@
     return money(province.basicAmount);
   }
 
-  function calculateCppContributions(annualIncome) {
+  function calculatePensionContributions(annualIncome, plan) {
     const income = money(annualIncome);
-    const cpp = RATE_DATA.cpp;
-    const contributory = Math.min(Math.max(0, income - cpp.exemption), cpp.ympe - cpp.exemption);
-    const secondAdditionalContributory = Math.min(Math.max(0, income - cpp.ympe), cpp.yampe - cpp.ympe);
-    const base = roundCents(contributory * cpp.baseRate);
-    const firstAdditional = roundCents(contributory * cpp.firstAdditionalRate);
-    const secondAdditional = roundCents(secondAdditionalContributory * cpp.secondAdditionalRate);
+    const contributory = Math.min(Math.max(0, income - plan.exemption), plan.ympe - plan.exemption);
+    const secondAdditionalContributory = Math.min(Math.max(0, income - plan.ympe), plan.yampe - plan.ympe);
+    const base = roundCents(contributory * plan.baseRate);
+    const firstAdditional = roundCents(contributory * plan.firstAdditionalRate);
+    const secondAdditional = roundCents(secondAdditionalContributory * plan.secondAdditionalRate);
 
     return {
       base,
@@ -314,10 +344,34 @@
     };
   }
 
-  function calculateEiPremium(annualIncome) {
+  function calculateCppContributions(annualIncome) {
+    return calculatePensionContributions(annualIncome, RATE_DATA.cpp);
+  }
+
+  function calculateQppContributions(annualIncome) {
+    return calculatePensionContributions(annualIncome, RATE_DATA.quebec.qpp);
+  }
+
+  function calculatePremium(annualIncome, rateData) {
     const income = money(annualIncome);
-    const ei = RATE_DATA.ei;
-    return roundCents(Math.min(income, ei.maxInsurable) * ei.rate);
+    return roundCents(Math.min(Math.min(income, rateData.maxInsurable) * rateData.rate, rateData.maxPremium));
+  }
+
+  function calculateEiPremium(annualIncome) {
+    return calculatePremium(annualIncome, RATE_DATA.ei);
+  }
+
+  function calculateQuebecEiPremium(annualIncome) {
+    return calculatePremium(annualIncome, RATE_DATA.quebec.ei);
+  }
+
+  function calculateQpipPremium(annualIncome) {
+    return calculatePremium(annualIncome, RATE_DATA.quebec.qpip);
+  }
+
+  function calculateQuebecWorkerDeduction(annualIncome) {
+    const workerDeduction = RATE_DATA.quebec.workerDeduction;
+    return roundCents(Math.min(money(annualIncome) * workerDeduction.rate, workerDeduction.max));
   }
 
   function calculateOntarioHealthPremium(taxableIncome) {
@@ -354,15 +408,21 @@
     return 0;
   }
 
-  function calculateFederalTax(taxableIncome, grossIncome, cpp, eiPremium) {
+  function calculateFederalTax(taxableIncome, grossIncome, pensionContributions, eiPremium, options) {
+    const settings = options || {};
     const bracketResult = calculateBracketTax(taxableIncome, RATE_DATA.federal.brackets);
     const lowestRate = RATE_DATA.federal.lowestRate;
     const basicPersonalAmount = calculateFederalBasicPersonalAmount(taxableIncome);
     const personalCredit = basicPersonalAmount * lowestRate;
-    const cppEiCredit = (cpp.base + eiPremium) * lowestRate;
+    const payrollCreditBase = settings.payrollCreditBase === undefined
+      ? pensionContributions.base + eiPremium
+      : money(settings.payrollCreditBase);
+    const payrollCredit = payrollCreditBase * lowestRate;
     const employmentAmount = Math.min(money(grossIncome), RATE_DATA.federal.canadaEmploymentAmount);
     const employmentCredit = employmentAmount * lowestRate;
-    const credits = personalCredit + cppEiCredit + employmentCredit;
+    const credits = personalCredit + payrollCredit + employmentCredit;
+    const preAbatementTax = Math.max(0, bracketResult.tax - credits);
+    const abatement = preAbatementTax * money(settings.abatementRate);
 
     return {
       bracketTax: roundCents(bracketResult.tax),
@@ -370,22 +430,42 @@
       basicPersonalAmount,
       credits: roundCents(credits),
       personalCredit: roundCents(personalCredit),
-      cppEiCredit: roundCents(cppEiCredit),
+      cppEiCredit: roundCents(payrollCredit),
+      payrollCredit: roundCents(payrollCredit),
       employmentCredit: roundCents(employmentCredit),
-      tax: roundCents(Math.max(0, bracketResult.tax - credits))
+      preAbatementTax: roundCents(preAbatementTax),
+      abatement: roundCents(abatement),
+      tax: roundCents(Math.max(0, preAbatementTax - abatement))
+    };
+  }
+
+  function calculateQuebecTax(taxableIncome) {
+    const province = RATE_DATA.provinces.QC;
+    const bracketResult = calculateBracketTax(taxableIncome, province.brackets);
+    const lowestRate = province.brackets[0].rate;
+    const personalCredit = province.basicAmount * lowestRate;
+    const baseTax = Math.max(0, bracketResult.tax - personalCredit);
+
+    return {
+      supported: true,
+      bracketTax: roundCents(bracketResult.tax),
+      rows: bracketResult.rows,
+      basicPersonalAmount: province.basicAmount,
+      credits: roundCents(personalCredit),
+      personalCredit: roundCents(personalCredit),
+      cppEiCredit: 0,
+      employmentCredit: 0,
+      baseTax: roundCents(baseTax),
+      surtax: 0,
+      healthPremium: 0,
+      reduction: 0,
+      tax: roundCents(baseTax)
     };
   }
 
   function calculateProvinceTax(provinceCode, taxableIncome, grossIncome, cpp, eiPremium) {
     const province = getProvince(provinceCode);
-    if (province.supported === false) {
-      return {
-        supported: false,
-        reason: province.unsupportedReason,
-        tax: 0,
-        rows: []
-      };
-    }
+    if (provinceCode === "QC") return calculateQuebecTax(taxableIncome);
 
     const bracketResult = calculateBracketTax(taxableIncome, province.brackets);
     const lowestRate = province.brackets[0].rate;
@@ -432,15 +512,31 @@
     const settings = options || {};
     const provinceCode = settings.province || "ON";
     const province = getProvince(provinceCode);
+    const isQuebec = provinceCode === "QC";
     const grossAnnualIncome = annualiseIncome(settings.amount, settings.payBasis, settings.hoursPerWeek);
     const deductionAnnual = money(settings.deductions && settings.deductions.annual);
-    const cpp = calculateCppContributions(grossAnnualIncome);
-    const eiPremium = calculateEiPremium(grossAnnualIncome);
-    const enhancedCppDeduction = cpp.firstAdditional + cpp.secondAdditional;
-    const taxableIncome = Math.max(0, grossAnnualIncome - deductionAnnual - enhancedCppDeduction);
-    const federal = calculateFederalTax(taxableIncome, grossAnnualIncome, cpp, eiPremium);
-    const provincial = calculateProvinceTax(provinceCode, taxableIncome, grossAnnualIncome, cpp, eiPremium);
-    const totalContributions = provincial.supported === false ? 0 : roundCents(cpp.total + eiPremium);
+    const cpp = isQuebec ? calculateQppContributions(grossAnnualIncome) : calculateCppContributions(grossAnnualIncome);
+    const eiPremium = isQuebec ? calculateQuebecEiPremium(grossAnnualIncome) : calculateEiPremium(grossAnnualIncome);
+    const qpipPremium = isQuebec ? calculateQpipPremium(grossAnnualIncome) : 0;
+    const enhancedCppDeduction = roundCents(cpp.firstAdditional + cpp.secondAdditional);
+    const quebecWorkerDeduction = isQuebec ? calculateQuebecWorkerDeduction(grossAnnualIncome) : 0;
+    const federalTaxableIncome = Math.max(0, grossAnnualIncome - deductionAnnual - enhancedCppDeduction);
+    const provincialTaxableIncome = Math.max(0, federalTaxableIncome - quebecWorkerDeduction);
+    const taxableIncome = federalTaxableIncome;
+    const federal = calculateFederalTax(
+      federalTaxableIncome,
+      grossAnnualIncome,
+      cpp,
+      eiPremium,
+      isQuebec
+        ? {
+            abatementRate: RATE_DATA.quebec.federalAbatementRate,
+            payrollCreditBase: cpp.base + eiPremium + qpipPremium
+          }
+        : {}
+    );
+    const provincial = calculateProvinceTax(provinceCode, provincialTaxableIncome, grossAnnualIncome, cpp, eiPremium);
+    const totalContributions = provincial.supported === false ? 0 : roundCents(cpp.total + eiPremium + qpipPremium);
     const totalTax = provincial.supported === false ? 0 : roundCents(federal.tax + provincial.tax);
     const totalTaxAndContributions = roundCents(totalTax + totalContributions);
     const takeHomeAnnual = Math.max(0, grossAnnualIncome - totalTaxAndContributions);
@@ -455,8 +551,12 @@
       unsupportedReason: provincial.reason || "",
       grossAnnualIncome,
       taxableIncome,
+      federalTaxableIncome,
+      provincialTaxableIncome,
       deductionAnnual,
       enhancedCppDeduction,
+      enhancedPensionDeduction: enhancedCppDeduction,
+      quebecWorkerDeduction,
       gross: periodiseAnnual(grossAnnualIncome, settings.hoursPerWeek),
       takeHome: periodiseAnnual(takeHomeAnnual, settings.hoursPerWeek),
       afterDeductions: periodiseAnnual(afterDeductionsAnnual, settings.hoursPerWeek),
@@ -464,6 +564,9 @@
       provincial,
       cpp,
       eiPremium,
+      qpipPremium,
+      pensionPlanName: isQuebec ? "QPP" : "CPP",
+      pensionSecondPlanName: isQuebec ? "QPP2" : "CPP2",
       totalContributions,
       totalTax,
       totalTaxAndContributions,
@@ -481,6 +584,9 @@
     calculateCppContributions,
     calculateEiPremium,
     calculateFederalBasicPersonalAmount,
+    calculateQpipPremium,
+    calculateQppContributions,
+    calculateQuebecEiPremium,
     calculateTakeHome,
     getProvince,
     periodiseAnnual,

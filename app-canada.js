@@ -16,6 +16,8 @@
   const effectiveTaxRate = document.getElementById("canadaEffectiveTaxRate");
   const federalTax = document.getElementById("canadaFederalTax");
   const provincialTax = document.getElementById("canadaProvincialTax");
+  const pensionLabel = document.getElementById("canadaPensionLabel");
+  const eiLabel = document.getElementById("canadaEiLabel");
   const cpp = document.getElementById("canadaCpp");
   const ei = document.getElementById("canadaEi");
   const afterDeductions = document.getElementById("canadaAfterDeductions");
@@ -69,6 +71,18 @@
     breakdownBody.append(row);
   }
 
+  function addSectionRow(body, label) {
+    const row = document.createElement("tr");
+    row.className = "section-row";
+
+    const cell = document.createElement("td");
+    cell.textContent = label;
+    cell.colSpan = 4;
+
+    row.append(cell);
+    body.append(row);
+  }
+
   function addBracketRows(label, rows) {
     rows.forEach((band) => {
       const row = document.createElement("tr");
@@ -103,33 +117,53 @@
     effectiveTaxRate.textContent = "0.0%";
     federalTax.textContent = "$0";
     provincialTax.textContent = "$0";
+    pensionLabel.textContent = "CPP";
+    eiLabel.textContent = "EI";
     cpp.textContent = "$0";
     ei.textContent = "$0";
     afterDeductions.textContent = "$0";
 
     breakdownBody.replaceChildren();
     bracketBody.replaceChildren();
+    addSectionRow(breakdownBody, "Status");
     addBreakdownRow("Selected province", result.provinceName);
     addBreakdownRow("Status", result.unsupportedReason);
   }
 
   function renderBreakdown(result) {
     breakdownBody.replaceChildren();
+    addSectionRow(breakdownBody, "Income");
     addBreakdownRow("Gross employment income", formatMoney(result.grossAnnualIncome));
     addBreakdownRow("Tax deductions entered", formatMoney(result.deductionAnnual));
-    addBreakdownRow("Enhanced CPP deduction", formatMoney(result.enhancedCppDeduction));
-    addBreakdownRow("Taxable income", formatMoney(result.taxableIncome));
+    addBreakdownRow(`Enhanced ${result.pensionPlanName} deduction`, formatMoney(result.enhancedPensionDeduction));
+    if (result.quebecWorkerDeduction > 0) addBreakdownRow("Quebec worker deduction", formatMoney(result.quebecWorkerDeduction));
+    if (result.federalTaxableIncome === result.provincialTaxableIncome) {
+      addBreakdownRow("Taxable income", formatMoney(result.taxableIncome));
+    } else {
+      addBreakdownRow("Federal taxable income", formatMoney(result.federalTaxableIncome));
+      addBreakdownRow(`${result.provinceName} taxable income`, formatMoney(result.provincialTaxableIncome));
+    }
+
+    addSectionRow(breakdownBody, "Federal");
     addBreakdownRow("Federal basic tax", formatMoney(result.federal.bracketTax));
     addBreakdownRow("Federal credits", `-${formatMoney(result.federal.credits)}`);
+    if (result.federal.abatement > 0) addBreakdownRow("Federal Quebec abatement", `-${formatMoney(result.federal.abatement)}`);
     addBreakdownRow("Federal tax", formatMoney(result.federal.tax));
+
+    addSectionRow(breakdownBody, result.provinceName);
     addBreakdownRow(`${result.provinceName} basic tax`, formatMoney(result.provincial.bracketTax));
     addBreakdownRow(`${result.provinceName} credits`, `-${formatMoney(result.provincial.credits)}`);
-    if (result.provincial.surtax > 0) addBreakdownRow(`${result.provinceName} surtax`, formatMoney(result.provincial.surtax));
+    if (result.provinceCode === "ON" || result.provincial.surtax > 0) {
+      addBreakdownRow(`${result.provinceName} surtax`, formatMoney(result.provincial.surtax));
+    }
     if (result.provincial.healthPremium > 0) addBreakdownRow(`${result.provinceName} health premium`, formatMoney(result.provincial.healthPremium));
     if (result.provincial.reduction > 0) addBreakdownRow(`${result.provinceName} tax reduction`, `-${formatMoney(result.provincial.reduction)}`);
     addBreakdownRow(`${result.provinceName} tax`, formatMoney(result.provincial.tax));
-    addBreakdownRow("CPP contributions", formatMoney(result.cpp.total));
+
+    addSectionRow(breakdownBody, "Payroll and totals");
+    addBreakdownRow(`${result.pensionPlanName} contributions`, formatMoney(result.cpp.total));
     addBreakdownRow("EI premium", formatMoney(result.eiPremium));
+    if (result.qpipPremium > 0) addBreakdownRow("QPIP premium", formatMoney(result.qpipPremium));
     addBreakdownRow("Total tax and payroll contributions", formatMoney(result.totalTaxAndContributions), { total: true });
     addBreakdownRow("Annual take-home before deductions", formatMoney(result.takeHome.annual), { total: true });
     addBreakdownRow("Annual take-home after deductions", formatMoney(result.afterDeductions.annual), { total: true });
@@ -137,7 +171,9 @@
 
   function renderBracketRows(result) {
     bracketBody.replaceChildren();
+    addSectionRow(bracketBody, "Federal");
     addBracketRows("Federal", result.federalRows);
+    addSectionRow(bracketBody, result.provinceName);
     addBracketRows(result.provinceName, result.provincialRows);
   }
 
@@ -145,9 +181,13 @@
     const provinceLabel = `${result.provinceName}, ${result.taxYear}`;
     taxYearLabel.textContent = provinceLabel;
     provinceAssumption.textContent = result.supported ? `${result.provinceName} rates and credits` : `${result.provinceName} not implemented`;
-    rateBadge.textContent = `CRA rates checked ${result.checkedDateLabel}`;
+    rateBadge.textContent = result.provinceCode === "QC"
+      ? `CRA/Revenu Quebec rates checked ${result.checkedDateLabel}`
+      : `CRA rates checked ${result.checkedDateLabel}`;
     rateStatus.textContent = result.supported
-      ? "Using bundled CRA 2026 rates for a standard employment estimate."
+      ? result.provinceCode === "QC"
+        ? "Using bundled CRA and Revenu Quebec 2026 rates for a standard employment estimate."
+        : "Using bundled CRA 2026 rates for a standard employment estimate."
       : result.unsupportedReason;
 
     if (!result.supported) {
@@ -165,8 +205,10 @@
     effectiveTaxRate.textContent = percent.format(result.effectiveTaxRate);
     federalTax.textContent = formatMoney(result.federal.tax);
     provincialTax.textContent = formatMoney(result.provincial.tax);
+    pensionLabel.textContent = result.pensionPlanName;
+    eiLabel.textContent = result.qpipPremium > 0 ? "EI + QPIP" : "EI";
     cpp.textContent = formatMoney(result.cpp.total);
-    ei.textContent = formatMoney(result.eiPremium);
+    ei.textContent = formatMoney(result.eiPremium + result.qpipPremium);
     afterDeductions.textContent = formatMoney(result.afterDeductions.annual);
 
     renderBreakdown(result);

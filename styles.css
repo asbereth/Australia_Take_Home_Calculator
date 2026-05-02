@@ -522,6 +522,21 @@ tr.total-row td {
   font-weight: 900;
 }
 
+tr.section-row td {
+  border-bottom-color: var(--line-strong);
+  padding-top: 18px;
+  color: var(--warm);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+tr.section-row:first-child td {
+  padding-top: 11px;
+}
+
 .muted-cell {
   color: var(--muted);
 }
