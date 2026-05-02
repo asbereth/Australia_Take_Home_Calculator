@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en-AU">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Australia Take-Home Pay Calculator</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="app-header">
+        <div>
+          <p class="eyebrow">2025-26 Australian tax year</p>
+          <h1>Australia take-home pay calculator</h1>
+        </div>
+        <div class="header-actions">
+          <a class="nav-link" href="index.html">Country selector</a>
+          <span id="rateBadge" class="rate-badge">ATO, Fair Work rates checked Apr 2026</span>
+        </div>
+      </header>
+
+      <div class="workspace">
+        <section class="panel controls-panel" aria-label="Calculator inputs">
+          <form id="calculatorForm" autocomplete="off">
+            <div class="field-group">
+              <label class="field-label" for="incomeAmount">Gross income</label>
+              <div class="money-input">
+                <span aria-hidden="true">$</span>
+                <input id="incomeAmount" name="incomeAmount" type="text" inputmode="decimal" autocomplete="off" value="100,000">
+              </div>
+            </div>
+
+            <fieldset class="field-group">
+              <legend class="field-label">Pay basis</legend>
+              <div class="segmented">
+                <label>
+                  <input type="radio" name="payBasis" value="annual" checked>
+                  <span>Annual</span>
+                </label>
+                <label>
+                  <input type="radio" name="payBasis" value="monthly">
+                  <span>Monthly</span>
+                </label>
+                <label>
+                  <input type="radio" name="payBasis" value="weekly">
+                  <span>Weekly</span>
+                </label>
+                <label>
+                  <input type="radio" name="payBasis" value="hourly">
+                  <span>Hourly</span>
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset class="field-group">
+              <legend class="field-label">Tax residency</legend>
+              <div class="segmented two-up">
+                <label>
+                  <input type="radio" name="residency" value="resident" checked>
+                  <span>Resident</span>
+                </label>
+                <label>
+                  <input type="radio" name="residency" value="foreign">
+                  <span>Non-resident</span>
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset class="field-group">
+              <legend class="field-label">Superannuation</legend>
+              <div class="segmented two-up">
+                <label>
+                  <input type="radio" name="superMode" value="onTop" checked>
+                  <span>Paid on top</span>
+                </label>
+                <label>
+                  <input type="radio" name="superMode" value="included">
+                  <span>Included</span>
+                </label>
+              </div>
+            </fieldset>
+
+            <div class="two-fields">
+              <div class="field-group">
+                <label class="field-label" for="hoursPerWeek">Hours/week</label>
+                <input id="hoursPerWeek" class="number-input" name="hoursPerWeek" type="number" min="1" max="80" step="0.5" value="38">
+              </div>
+
+              <div class="field-group">
+                <label class="field-label" for="medicareProfile">Medicare</label>
+                <select id="medicareProfile" name="medicareProfile">
+                  <option value="standard">Standard</option>
+                  <option value="exempt">Exempt</option>
+                </select>
+              </div>
+            </div>
+
+            <fieldset class="field-group">
+              <legend class="field-label">Deductions</legend>
+              <div class="deduction-grid">
+                <div class="field-group">
+                  <label class="field-label" for="workFromHomeHours">WFH hours/year</label>
+                  <input id="workFromHomeHours" class="number-input" name="workFromHomeHours" type="number" min="0" max="8760" step="1" value="0">
+                </div>
+
+                <div class="field-group">
+                  <label class="field-label" for="otherDeductions">Other expenses/year</label>
+                  <div class="money-input compact-money">
+                    <span aria-hidden="true">$</span>
+                    <input id="otherDeductions" name="otherDeductions" type="text" inputmode="decimal" autocomplete="off" value="0">
+                  </div>
+                </div>
+
+                <div class="field-group">
+                  <label class="field-label" for="deductionWorkUsePercent">Work/business use</label>
+                  <div class="percent-input">
+                    <input id="deductionWorkUsePercent" class="number-input" name="deductionWorkUsePercent" type="number" min="0" max="100" step="1" value="100">
+                    <span aria-hidden="true">%</span>
+                  </div>
+                </div>
+              </div>
+              <p id="workFromHomeRateNote" class="field-hint">WFH fixed rate uses the latest bundled ATO rate. Other expenses are reduced to the work/business-use portion.</p>
+            </fieldset>
+          </form>
+
+          <dl class="assumption-list">
+            <div>
+              <dt>Taxable income</dt>
+              <dd>Cash salary less deductions</dd>
+            </div>
+            <div>
+              <dt>Resident offsets</dt>
+              <dd>LITO included where eligible</dd>
+            </div>
+            <div>
+              <dt>Deductions</dt>
+              <dd id="deductionAssumption">WFH fixed rate plus apportioned other expenses</dd>
+            </div>
+            <div>
+              <dt>Super</dt>
+              <dd id="superAssumption">12% employer SG</dd>
+            </div>
+            <div>
+              <dt>Not included</dt>
+              <dd>HELP, salary sacrifice, MLS, depreciation schedules</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="panel results-panel" aria-label="Calculator results">
+          <div class="hero-result">
+            <span>Annual take-home</span>
+            <strong id="annualTakeHome">$77,212</strong>
+          </div>
+
+          <div class="pay-grid" aria-live="polite">
+            <div>
+              <span>Monthly</span>
+              <strong id="monthlyTakeHome">$6,434</strong>
+            </div>
+            <div>
+              <span>Weekly</span>
+              <strong id="weeklyTakeHome">$1,485</strong>
+            </div>
+            <div>
+              <span>Hourly</span>
+              <strong id="hourlyTakeHome">$39.07</strong>
+            </div>
+            <div>
+              <span>Effective tax</span>
+              <strong id="effectiveTaxRate">22.8%</strong>
+            </div>
+            <div>
+              <span>Super/year</span>
+              <strong id="annualSuper">$12,000</strong>
+            </div>
+            <div>
+              <span>Total package</span>
+              <strong id="totalPackage">$112,000</strong>
+            </div>
+            <div>
+              <span>Deductions/year</span>
+              <strong id="annualDeductions">$0</strong>
+            </div>
+            <div>
+              <span>Tax saved</span>
+              <strong id="taxSaved">$0</strong>
+            </div>
+            <div>
+              <span>After expenses</span>
+              <strong id="annualAfterExpenses">$77,212</strong>
+            </div>
+          </div>
+
+          <div class="reference-grid" aria-label="Pay references">
+            <div>
+              <span>National minimum wage</span>
+              <strong id="minimumWageHourly">$24.95/hr</strong>
+              <small id="minimumWageDetail">$948/wk, $49,296/yr before tax</small>
+            </div>
+            <div>
+              <span>Minimum wage package</span>
+              <strong id="minimumWagePackage">$55,212/yr</strong>
+              <small id="minimumWageSuper">Includes 12% super guarantee</small>
+            </div>
+          </div>
+
+          <div class="table-block">
+            <div class="table-heading">
+              <h2>Breakdown</h2>
+              <span id="taxYearLabel">Resident, 2025-26</span>
+            </div>
+            <table>
+              <tbody id="breakdownBody"></tbody>
+            </table>
+          </div>
+
+          <div class="table-block">
+            <div class="table-heading">
+              <h2>Tax brackets</h2>
+              <span id="marginalRateLabel">Marginal rate 30.0%</span>
+            </div>
+            <table class="bracket-table">
+              <thead>
+                <tr>
+                  <th scope="col">Band</th>
+                  <th scope="col">Rate</th>
+                  <th scope="col">This income</th>
+                  <th scope="col">Tax</th>
+                </tr>
+              </thead>
+              <tbody id="bracketBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <footer class="source-footer">
+        Sources:
+        <a href="https://www.ato.gov.au/tax-rates-and-codes/tax-rates-australian-residents">ATO resident rates</a>,
+        <a href="https://www.ato.gov.au/tax-rates-and-codes/tax-rates-foreign-residents/">ATO foreign resident rates</a>,
+        <a href="https://www.ato.gov.au/individuals-and-families/medicare-and-private-health-insurance/medicare-levy/medicare-levy-reduction/medicare-levy-reduction-for-low-income-earners">ATO Medicare levy thresholds</a>,
+        <a href="https://www.ato.gov.au/individuals-and-families/income-deductions-offsets-and-records/tax-offsets/low-income-tax-offset">ATO LITO</a>,
+        <a href="https://www.ato.gov.au/businesses-and-organisations/super-for-employers/paying-super-contributions/how-much-super-to-pay">ATO super guarantee</a>,
+        <a href="https://www.fairwork.gov.au/pay-and-wages/minimum-wages">Fair Work minimum wage</a>,
+        <a href="https://www.ato.gov.au/individuals-and-families/income-deductions-offsets-and-records/deductions-you-can-claim/work-related-deductions/how-to-claim-deductions">ATO deductions</a>,
+        <a href="https://www.ato.gov.au/businesses-and-organisations/income-deductions-and-concessions/income-and-deductions-for-business/deductions/">ATO business deductions</a>,
+        <a href="https://www.ato.gov.au/individuals-and-families/income-deductions-offsets-and-records/deductions-you-can-claim/working-from-home-expenses/fixed-rate-method">ATO work from home fixed rate</a>.
+        <span id="rateStatus" class="rate-status">Using bundled official rates.</span>
+      </footer>
+    </main>
+
+    <script src="tax-australia.js"></script>
+    <script src="app-australia.js"></script>
+  </body>
+</html>

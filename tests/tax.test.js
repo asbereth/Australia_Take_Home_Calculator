@@ -1,7 +1,7 @@
 const assert = require("node:assert/strict");
 const test = require("node:test");
 
-const tax = require("../tax.js");
+const tax = require("../tax-australia.js");
 
 function calculate(options) {
   return tax.calculateTakeHome({

@@ -88,6 +88,38 @@ h2 {
   font-weight: 700;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.nav-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: var(--input);
+  color: var(--accent-deep);
+  font-size: 0.88rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.nav-link:hover,
+.nav-link:focus-visible,
+.country-card:hover,
+.country-card:focus-visible {
+  border-color: var(--accent);
+  outline: 3px solid rgba(40, 184, 169, 0.2);
+  outline-offset: 2px;
+}
+
 .workspace {
   display: grid;
   grid-template-columns: minmax(320px, 0.95fr) minmax(480px, 1.05fr);
@@ -178,6 +210,11 @@ select {
   color: var(--ink);
   padding: 10px 12px;
   outline: 0;
+}
+
+input:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
 }
 
 .compact-money {
@@ -507,6 +544,119 @@ tr.total-row td {
   font-weight: 700;
 }
 
+.notice {
+  margin-top: 18px;
+  border: 1px solid var(--warm);
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: rgba(226, 163, 109, 0.1);
+  color: var(--ink);
+  font-size: 0.94rem;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+.country-shell {
+  max-width: 1040px;
+}
+
+.country-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.country-card {
+  display: grid;
+  min-height: 280px;
+  align-content: end;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 24px;
+  background: var(--paper);
+  box-shadow: var(--shadow);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.country-code {
+  width: fit-content;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  padding: 6px 8px;
+  color: var(--warm);
+  font-size: 0.86rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.country-name {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.country-card strong {
+  font-size: clamp(1.7rem, 4vw, 3rem);
+  line-height: 1;
+}
+
+.country-card small {
+  max-width: 42rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.placeholder-workspace {
+  align-items: start;
+}
+
+.placeholder-panel {
+  min-height: 100%;
+}
+
+.placeholder-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.placeholder-list div {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+  background: var(--paper-raised);
+}
+
+.placeholder-list span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.placeholder-list strong {
+  display: block;
+  margin-top: 7px;
+  font-size: 1.05rem;
+  line-height: 1.25;
+}
+
+.placeholder-note {
+  margin: 20px 0 0;
+  color: var(--muted);
+  font-weight: 700;
+  line-height: 1.5;
+}
+
 @media (max-width: 880px) {
   .app-shell {
     width: min(100% - 24px, 680px);
@@ -521,6 +671,10 @@ tr.total-row td {
 
   .app-header {
     align-items: start;
+  }
+
+  .header-actions {
+    justify-content: flex-start;
   }
 
   .rate-badge {
@@ -559,6 +713,10 @@ tr.total-row td {
   .pay-grid div:nth-last-child(-n + 2) {
     border-bottom: 0;
   }
+
+  .country-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 560px) {
@@ -584,7 +742,8 @@ tr.total-row td {
   .deduction-grid,
   .assumption-list div,
   .pay-grid,
-  .reference-grid {
+  .reference-grid,
+  .placeholder-list {
     grid-template-columns: 1fr;
   }
 

@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en-CA">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Canada Take-Home Pay Calculator</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="app-header">
+        <div>
+          <p class="eyebrow">2026 Canadian tax year</p>
+          <h1>Canada take-home pay calculator</h1>
+        </div>
+        <div class="header-actions">
+          <a class="nav-link" href="index.html">Country selector</a>
+          <span id="canadaRateBadge" class="rate-badge">CRA rates checked Jan 2026</span>
+        </div>
+      </header>
+
+      <div class="workspace">
+        <section class="panel controls-panel" aria-label="Canada calculator inputs">
+          <form id="canadaCalculatorForm" autocomplete="off">
+            <div class="field-group">
+              <label class="field-label" for="canadaIncomeAmount">Gross employment income</label>
+              <div class="money-input">
+                <span aria-hidden="true">$</span>
+                <input id="canadaIncomeAmount" name="canadaIncomeAmount" type="text" inputmode="decimal" autocomplete="off" value="100,000">
+              </div>
+            </div>
+
+            <fieldset class="field-group">
+              <legend class="field-label">Pay basis</legend>
+              <div class="segmented">
+                <label>
+                  <input type="radio" name="canadaPayBasis" value="annual" checked>
+                  <span>Annual</span>
+                </label>
+                <label>
+                  <input type="radio" name="canadaPayBasis" value="monthly">
+                  <span>Monthly</span>
+                </label>
+                <label>
+                  <input type="radio" name="canadaPayBasis" value="weekly">
+                  <span>Weekly</span>
+                </label>
+                <label>
+                  <input type="radio" name="canadaPayBasis" value="hourly">
+                  <span>Hourly</span>
+                </label>
+              </div>
+            </fieldset>
+
+            <div class="field-group">
+              <label class="field-label" for="province">Province or territory</label>
+              <select id="province" name="province">
+                <option value="ON" selected>Ontario</option>
+                <option value="AB">Alberta</option>
+                <option value="BC">British Columbia</option>
+                <option value="MB">Manitoba</option>
+                <option value="NB">New Brunswick</option>
+                <option value="NL">Newfoundland and Labrador</option>
+                <option value="NS">Nova Scotia</option>
+                <option value="NT">Northwest Territories</option>
+                <option value="NU">Nunavut</option>
+                <option value="PE">Prince Edward Island</option>
+                <option value="QC">Quebec</option>
+                <option value="SK">Saskatchewan</option>
+                <option value="YT">Yukon</option>
+              </select>
+            </div>
+
+            <div class="two-fields">
+              <div class="field-group">
+                <label class="field-label" for="canadaHoursPerWeek">Hours/week</label>
+                <input id="canadaHoursPerWeek" class="number-input" name="canadaHoursPerWeek" type="number" min="1" max="80" step="0.5" value="40">
+              </div>
+
+              <div class="field-group">
+                <label class="field-label" for="canadaAnnualDeductions">Tax deductions/year</label>
+                <div class="money-input compact-money">
+                  <span aria-hidden="true">$</span>
+                  <input id="canadaAnnualDeductions" name="canadaAnnualDeductions" type="text" inputmode="decimal" autocomplete="off" value="0">
+                </div>
+              </div>
+            </div>
+          </form>
+
+          <dl class="assumption-list">
+            <div>
+              <dt>Tax model</dt>
+              <dd>Annualized employment estimate</dd>
+            </div>
+            <div>
+              <dt>Province</dt>
+              <dd id="canadaProvinceAssumption">Ontario rates and credits</dd>
+            </div>
+            <div>
+              <dt>Payroll</dt>
+              <dd>CPP, CPP2, and EI included</dd>
+            </div>
+            <div>
+              <dt>Not included</dt>
+              <dd>RRSP limits, benefits, dependants, Quebec</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="panel results-panel" aria-label="Canada calculator results">
+          <div class="hero-result">
+            <span>Annual take-home</span>
+            <strong id="canadaAnnualTakeHome">$0</strong>
+          </div>
+
+          <div class="pay-grid" aria-live="polite">
+            <div>
+              <span>Monthly</span>
+              <strong id="canadaMonthlyTakeHome">$0</strong>
+            </div>
+            <div>
+              <span>Weekly</span>
+              <strong id="canadaWeeklyTakeHome">$0</strong>
+            </div>
+            <div>
+              <span>Hourly</span>
+              <strong id="canadaHourlyTakeHome">$0.00</strong>
+            </div>
+            <div>
+              <span>Effective tax</span>
+              <strong id="canadaEffectiveTaxRate">0.0%</strong>
+            </div>
+            <div>
+              <span>Federal tax</span>
+              <strong id="canadaFederalTax">$0</strong>
+            </div>
+            <div>
+              <span>Province tax</span>
+              <strong id="canadaProvincialTax">$0</strong>
+            </div>
+            <div>
+              <span>CPP</span>
+              <strong id="canadaCpp">$0</strong>
+            </div>
+            <div>
+              <span>EI</span>
+              <strong id="canadaEi">$0</strong>
+            </div>
+            <div>
+              <span>After deductions</span>
+              <strong id="canadaAfterDeductions">$0</strong>
+            </div>
+          </div>
+
+          <div id="canadaNotice" class="notice" hidden></div>
+
+          <div class="table-block">
+            <div class="table-heading">
+              <h2>Breakdown</h2>
+              <span id="canadaTaxYearLabel">Ontario, 2026</span>
+            </div>
+            <table>
+              <tbody id="canadaBreakdownBody"></tbody>
+            </table>
+          </div>
+
+          <div class="table-block">
+            <div class="table-heading">
+              <h2>Tax brackets</h2>
+              <span>Taxable income by jurisdiction</span>
+            </div>
+            <table class="bracket-table">
+              <thead>
+                <tr>
+                  <th scope="col">Jurisdiction / Band</th>
+                  <th scope="col">Rate</th>
+                  <th scope="col">This income</th>
+                  <th scope="col">Tax</th>
+                </tr>
+              </thead>
+              <tbody id="canadaBracketBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <footer class="source-footer">
+        Sources:
+        <a href="https://www.canada.ca/en/revenue-agency/services/forms-publications/payroll/t4127-payroll-deductions-formulas/t4127-jan/t4127-jan-payroll-deductions-formulas-computer-programs.html">CRA T4127 2026 formulas</a>,
+        <a href="https://www.canada.ca/en/revenue-agency/services/tax/individuals/frequently-asked-questions-individuals/canadian-income-tax-rates-individuals-current-previous-years.html">CRA tax rates</a>,
+        <a href="https://www.canada.ca/en/revenue-agency/services/tax/individuals/topics/about-your-tax-return/tax-return/completing-a-tax-return/personal-address-information/your-province-territory-residence.html">CRA province of residence</a>,
+        <a href="https://www.revenuquebec.ca/en/online-services/tools/webras/">Revenu Quebec WebRAS</a>.
+        <span id="canadaRateStatus" class="rate-status">Using bundled CRA 2026 rates for a standard employment estimate.</span>
+      </footer>
+    </main>
+
+    <script src="tax-canada.js"></script>
+    <script src="app-canada.js"></script>
+  </body>
+</html>
